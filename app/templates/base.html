@@ -3,59 +3,193 @@
 <head>
     <title>{% block title %}Визуализатор гипотезы Коллатца{% endblock %}</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/material-components-web@14.0.0/dist/material-components-web.min.css" rel="stylesheet">
     <style>
-        .navbar {
-            margin-bottom: 2rem;
+        :root {
+            --md-sys-color-primary: #006495;
+            --md-sys-color-surface: #fafafa;
+            --md-sys-color-background: #ffffff;
+            --md-sys-color-on-surface: #1a1c1e;
         }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            background-color: var(--md-sys-color-background);
+            color: var(--md-sys-color-on-surface);
+        }
+
+        .navbar {
+            background-color: var(--md-sys-color-primary);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
         }
+
         .card {
-            margin-bottom: 1rem;
+            background: var(--md-sys-color-surface);
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 1.5rem;
+            transition: box-shadow 0.3s ease;
         }
+
+        .card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
         .input-container {
             margin: 2rem 0;
         }
+
+        .btn {
+            border-radius: 24px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background-color: var(--md-sys-color-primary);
+            color: white;
+        }
+
+        .btn-success {
+            background-color: #2e7d32;
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: #d32f2f;
+            color: white;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+        }
+
+        input[type="number"] {
+            padding: 0.75rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            font-size: 1rem;
+            width: 100%;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: var(--md-sys-color-primary);
+        }
+
+        .status-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-radius: 16px;
+            background: #e8f4fd;
+            color: var(--md-sys-color-primary);
+            font-size: 0.875rem;
+            margin-top: 1rem;
+        }
+
+        .status-chip .material-icons {
+            font-size: 1.2rem;
+            margin-right: 0.5rem;
+        }
+
         #visualization {
             margin-top: 2rem;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
+        }
+
+        .nav-link:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+
         .result-info {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 1.5rem;
             margin: 1rem 0;
-            padding: 1rem;
-            border-radius: 5px;
-            background-color: #f8f9fa;
         }
-        th a:hover {
-            text-decoration: underline !important;
+
+        .stats-card {
+            text-align: center;
+            padding: 2rem;
         }
-        th i {
-            margin-left: 5px;
+
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--md-sys-color-primary);
+            margin: 1rem 0;
+        }
+
+        .stats-label {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 0.5rem;
         }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar">
         <div class="container">
-            <a class="navbar-brand" href="/">Гипотеза Коллатца</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/">Калькулятор</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/history">История</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/overview">Статистика</a>
-                    </li>
-                </ul>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <a class="navbar-brand" href="/" style="color: white; text-decoration: none; font-size: 1.5rem;">
+                    <span class="material-icons" style="vertical-align: middle; margin-right: 0.5rem;">
+                        functions
+                    </span>
+                    Гипотеза Коллатца
+                </a>
+                <div style="display: flex; gap: 1rem;">
+                    <a class="nav-link" href="/">
+                        <span class="material-icons" style="vertical-align: middle; margin-right: 0.25rem;">
+                            calculate
+                        </span>
+                        Калькулятор
+                    </a>
+                    <a class="nav-link" href="/history">
+                        <span class="material-icons" style="vertical-align: middle; margin-right: 0.25rem;">
+                            history
+                        </span>
+                        История
+                    </a>
+                    <a class="nav-link" href="/overview">
+                        <span class="material-icons" style="vertical-align: middle; margin-right: 0.25rem;">
+                            analytics
+                        </span>
+                        Статистика
+                    </a>
+                </div>
             </div>
         </div>
     </nav>
@@ -64,7 +198,7 @@
         {% block content %}{% endblock %}
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/material-components-web@14.0.0/dist/material-components-web.min.js"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html> 

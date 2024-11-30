@@ -1,71 +1,142 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>История вычислений</h2>
+<div class="card">
+    <div class="card-body">
+        <h5 style="font-size: 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center;">
+            <span class="material-icons" style="margin-right: 0.5rem;">
+                history
+            </span>
+            История вычислений
+        </h5>
 
-<div class="table-responsive">
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>
-                    <a href="{{ url_for('history', sort='number', order='asc' if current_sort == 'number' and current_order == 'desc' else 'desc') }}" 
-                       class="text-dark text-decoration-none">
-                        Число
-                        {% if current_sort == 'number' %}
-                            <i class="bi bi-arrow-{{ 'up' if current_order == 'asc' else 'down' }}"></i>
-                        {% endif %}
-                    </a>
-                </th>
-                <th>
-                    <a href="{{ url_for('history', sort='steps', order='asc' if current_sort == 'steps' and current_order == 'desc' else 'desc') }}"
-                       class="text-dark text-decoration-none">
-                        Шагов
-                        {% if current_sort == 'steps' %}
-                            <i class="bi bi-arrow-{{ 'up' if current_order == 'asc' else 'down' }}"></i>
-                        {% endif %}
-                    </a>
-                </th>
-                <th>
-                    <a href="{{ url_for('history', sort='max_value', order='asc' if current_sort == 'max_value' and current_order == 'desc' else 'desc') }}"
-                       class="text-dark text-decoration-none">
-                        Макс. значение
-                        {% if current_sort == 'max_value' %}
-                            <i class="bi bi-arrow-{{ 'up' if current_order == 'asc' else 'down' }}"></i>
-                        {% endif %}
-                    </a>
-                </th>
-                <th>
-                    <a href="{{ url_for('history', sort='date', order='asc' if current_sort == 'date' and current_order == 'desc' else 'desc') }}"
-                       class="text-dark text-decoration-none">
-                        Дата
-                        {% if current_sort == 'date' %}
-                            <i class="bi bi-arrow-{{ 'up' if current_order == 'asc' else 'down' }}"></i>
-                        {% endif %}
-                    </a>
-                </th>
-                <th>Действия</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for calc in calculations %}
-            <tr>
-                <td>{{ calc.number }}</td>
-                <td>{{ calc.steps }}</td>
-                <td>{{ calc.max_value }}</td>
-                <td>{{ calc.date.strftime('%Y-%m-%d %H:%M:%S') if calc.date else 'Нет данных' }}</td>
-                <td>
-                    <button class="btn btn-sm btn-primary" onclick="showVisualization({{ calc.sequence }})">
-                        Показать график
-                    </button>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+        <div class="table-container">
+            <table class="material-table">
+                <thead>
+                    <tr>
+                        <th>
+                            <a href="{{ url_for('history', sort='number', order='asc' if current_sort == 'number' and current_order == 'desc' else 'desc') }}" 
+                               class="sort-link">
+                                <span>Число</span>
+                                {% if current_sort == 'number' %}
+                                    <span class="material-icons">
+                                        {{ 'arrow_upward' if current_order == 'asc' else 'arrow_downward' }}
+                                    </span>
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="{{ url_for('history', sort='steps', order='asc' if current_sort == 'steps' and current_order == 'desc' else 'desc') }}"
+                               class="sort-link">
+                                <span>Шагов</span>
+                                {% if current_sort == 'steps' %}
+                                    <span class="material-icons">
+                                        {{ 'arrow_upward' if current_order == 'asc' else 'arrow_downward' }}
+                                    </span>
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="{{ url_for('history', sort='max_value', order='asc' if current_sort == 'max_value' and current_order == 'desc' else 'desc') }}"
+                               class="sort-link">
+                                <span>Макс. значение</span>
+                                {% if current_sort == 'max_value' %}
+                                    <span class="material-icons">
+                                        {{ 'arrow_upward' if current_order == 'asc' else 'arrow_downward' }}
+                                    </span>
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="{{ url_for('history', sort='date', order='asc' if current_sort == 'date' and current_order == 'desc' else 'desc') }}"
+                               class="sort-link">
+                                <span>Дата</span>
+                                {% if current_sort == 'date' %}
+                                    <span class="material-icons">
+                                        {{ 'arrow_upward' if current_order == 'asc' else 'arrow_downward' }}
+                                    </span>
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for calc in calculations %}
+                    <tr>
+                        <td>{{ calc.number }}</td>
+                        <td>{{ calc.steps }}</td>
+                        <td>{{ calc.max_value }}</td>
+                        <td>{{ calc.date.strftime('%Y-%m-%d %H:%M:%S') if calc.date else 'Нет данных' }}</td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="showVisualization({{ calc.sequence }})">
+                                <span class="material-icons">
+                                    show_chart
+                                </span>
+                                <span>График</span>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
-<div id="visualization"></div>
+<div id="visualization" style="display: none;"></div>
 
+<style>
+.table-container {
+    overflow-x: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.material-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+.material-table th {
+    background: var(--md-sys-color-surface);
+    padding: 1rem;
+    text-align: left;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+.material-table td {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.sort-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: inherit;
+}
+
+.sort-link:hover {
+    color: var(--md-sys-color-primary);
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-sm .material-icons {
+    font-size: 1.2rem;
+}
+</style>
 {% endblock %}
 
 {% block scripts %}
@@ -76,17 +147,14 @@ function showVisualization(sequence) {
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: `number=${sequence[0]}`  // Берем первое число последовательности
+        body: `number=${sequence[0]}`
     })
     .then(response => response.json())
     .then(data => {
+        const vizEl = document.getElementById('visualization');
+        vizEl.style.display = 'block';
         Plotly.newPlot('visualization', JSON.parse(data.visualization));
-        
-        // Прокручиваем к графику
-        document.getElementById('visualization').scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
-        });
+        vizEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
 }
 </script>

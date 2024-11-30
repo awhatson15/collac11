@@ -1,42 +1,98 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Общая статистика</h2>
+<div class="overview-header">
+    <h5 style="font-size: 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center;">
+        <span class="material-icons" style="margin-right: 0.5rem;">
+            analytics
+        </span>
+        Общая статистика
+    </h5>
+</div>
 
-<div class="row mb-4">
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Всего чисел</h5>
-                <p class="card-text display-4">{{ calculations|length }}</p>
-            </div>
+<div class="stats-grid">
+    <div class="stats-card elevated">
+        <span class="material-icons stats-icon">numbers</span>
+        <div class="stats-label">Всего чисел</div>
+        <div class="stats-number">{{ calculations|length }}</div>
+    </div>
+    
+    <div class="stats-card elevated">
+        <span class="material-icons stats-icon">trending_up</span>
+        <div class="stats-label">Максимальное количество шагов</div>
+        <div class="stats-number">{{ calculations|map(attribute='steps')|max }}</div>
+        <div class="stats-subtitle">
+            для числа {{ calculations|selectattr('steps', 'eq', calculations|map(attribute='steps')|max)|map(attribute='number')|first }}
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Максимальное количество шагов</h5>
-                <p class="card-text display-4">{{ calculations|map(attribute='steps')|max }}</p>
-                <p class="card-text text-muted">
-                    для числа {{ calculations|selectattr('steps', 'eq', calculations|map(attribute='steps')|max)|map(attribute='number')|first }}
-                </p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Наибольшее значение</h5>
-                <p class="card-text display-4">{{ calculations|map(attribute='max_value')|max }}</p>
-                <p class="card-text text-muted">
-                    для числа {{ calculations|selectattr('max_value', 'eq', calculations|map(attribute='max_value')|max)|map(attribute='number')|first }}
-                </p>
-            </div>
+    
+    <div class="stats-card elevated">
+        <span class="material-icons stats-icon">all_time_high</span>
+        <div class="stats-label">Наибольшее значение</div>
+        <div class="stats-number">{{ calculations|map(attribute='max_value')|max }}</div>
+        <div class="stats-subtitle">
+            для числа {{ calculations|selectattr('max_value', 'eq', calculations|map(attribute='max_value')|max)|map(attribute='number')|first }}
         </div>
     </div>
 </div>
 
-<div id="visualization"></div>
+<div class="card mt-4">
+    <div class="card-body">
+        <div id="visualization"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+.overview-header {
+    margin-bottom: 2rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stats-card.elevated {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stats-card.elevated:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+.stats-icon {
+    font-size: 2.5rem;
+    color: var(--md-sys-color-primary);
+    margin-bottom: 1rem;
+}
+
+.stats-number {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--md-sys-color-primary);
+    margin: 1rem 0;
+}
+
+.stats-subtitle {
+    font-size: 0.875rem;
+    color: #666;
+    margin-top: 0.5rem;
+}
+
+.mt-4 {
+    margin-top: 2rem;
+}
+</style>
 {% endblock %}
 
 {% block scripts %}
