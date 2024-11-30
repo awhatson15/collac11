@@ -5,12 +5,19 @@ services:
     build: .
     ports:
       - "5000:5000"
+    depends_on:
+      - mongodb
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/
     volumes:
       - .:/app
-      - collatz_data:/data
-    environment:
-      - FLASK_APP=wsgi.py
-      - FLASK_ENV=development
+
+  mongodb:
+    image: mongo:4.4
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
 
 volumes:
-  collatz_data:
+  mongodb_data:
