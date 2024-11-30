@@ -71,20 +71,23 @@
 {% block scripts %}
 <script>
 function showVisualization(sequence) {
-    const trace = {
-        x: Array.from(Array(sequence.length).keys()),
-        y: sequence,
-        mode: 'lines+markers',
-        name: 'Последовательность Коллатца'
-    };
-
-    const layout = {
-        title: 'Визуализация последовательности Коллатца',
-        xaxis: {title: 'Шаг'},
-        yaxis: {title: 'Значение'}
-    };
-
-    Plotly.newPlot('visualization', [trace], layout);
+    fetch('/calculate', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `number=${sequence[0]}`  // Берем первое число последовательности
+    })
+    .then(response => response.json())
+    .then(data => {
+        Plotly.newPlot('visualization', JSON.parse(data.visualization));
+        
+        // Прокручиваем к графику
+        document.getElementById('visualization').scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    });
 }
 </script>
 {% endblock %} 
