@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Общая статистика</h2>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Всего чисел</h5>
+                <p class="card-text display-4">{{ calculations|length }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Максимальное количество шагов</h5>
+                <p class="card-text display-4">{{ calculations|map(attribute='steps')|max }}</p>
+                <p class="card-text text-muted">
+                    для числа {{ calculations|selectattr('steps', 'eq', calculations|map(attribute='steps')|max)|map(attribute='number')|first }}
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Наибольшее значение</h5>
+                <p class="card-text display-4">{{ calculations|map(attribute='max_value')|max }}</p>
+                <p class="card-text text-muted">
+                    для числа {{ calculations|selectattr('max_value', 'eq', calculations|map(attribute='max_value')|max)|map(attribute='number')|first }}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="visualization"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/overview-data')
+        .then(response => response.json())
+        .then(data => {
+            Plotly.newPlot('visualization', JSON.parse(data));
+        });
+});
+</script>
+{% endblock %} 
