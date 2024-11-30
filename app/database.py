@@ -87,7 +87,7 @@ def get_history(sort_by='date', order='desc'):
     if order not in ['ASC', 'DESC']:
         order = 'DESC'
     
-    # Определяем ��оле для сортировки с учетом типа max_value
+    # Определяем оле для сортировки с учетом типа max_value
     sort_columns = {
         'number': 'CAST(number AS INTEGER)',
         'steps': 'CAST(steps AS INTEGER)',
@@ -112,3 +112,21 @@ def get_history(sort_by='date', order='desc'):
         'date': datetime.strptime(row[3].split('.')[0], '%Y-%m-%d %H:%M:%S') if row[3] else None,
         'max_value': int(row[4])
     } for row in result]
+
+def get_next_number(start_from: int = 1) -> int:
+    """
+    Получает следующее нерассчитанное число, начиная с start_from
+    """
+    conn = sqlite3.connect('/data/collatz.db')
+    c = conn.cursor()
+    
+    while True:
+        result = c.execute('''
+            SELECT 1 FROM calculations 
+            WHERE CAST(number AS INTEGER) = ?
+        ''', (start_from,)).fetchone()
+        
+        if not result:
+            conn.close()
+            return start_from
+        start_from += 1

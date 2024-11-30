@@ -1,7 +1,12 @@
-from flask import render_template, request, jsonify
+from flask import render_template, request, jsonify, Response
 from app import app
 from .collatz import calculate_sequence, create_visualization, create_overview_visualization
-from .database import save_sequence, get_sequence, get_history
+from .database import save_sequence, get_sequence, get_history, get_next_number
+import time
+
+# Глобальная переменная для контроля автоматического расчета
+auto_calculate_active = False
+current_number = 1
 
 @app.route('/')
 def index():
@@ -59,4 +64,48 @@ def overview_data():
         'max_value': calc['max_value']
     } for calc in calculations])
     
-    return jsonify(visualization) 
+    return jsonify(visualization)
+
+@app.route('/auto-calculate/start')
+def start_auto_calculate():
+    """Запуск автоматического расчета"""
+    global auto_calculate_active, current_number
+    auto_calculate_active = True
+    current_number = int(request.args.get('start_from', 1))
+    return jsonify({'status': 'started', 'from': current_number})
+
+@app.route('/auto-calculate/stop')
+def stop_auto_calculate():
+    """Остановка автоматического расчета"""
+    global auto_calculate_active
+    auto_calculate_active = False
+    return jsonify({'status': 'stopped'})
+
+@app.route('/auto-calculate/status')
+def auto_calculate_status():
+    """Получение статуса автоматического расчета"""
+    return jsonify({
+        'active': auto_calculate_active,
+        'current_number': current_number
+    })
+
+@app.route('/auto-calculate/stream')
+def auto_calculate_stream():
+    """Поток событий для автоматического расчета"""
+    def generate():
+        global current_number
+        while True:
+            if not auto_calculate_active:
+                yield 'data: {"status": "stopped"}\n\n'
+                break
+                
+            next_number = get_next_number(current_number)
+            sequence = calculate_sequence(next_number)
+            save_sequence(next_number, sequence)
+            
+            yield f'data: {{"number": {next_number}, "steps": {len(sequence)-1}}}\n\n'
+            
+            current_number = next_number + 1
+            time.sleep(1)  # Пауза между расчетами
+            
+    return Response(generate(), mimetype='text/event-stream') 
