@@ -3,12 +3,24 @@
 {% block content %}
 <div class="card">
     <div class="card-body">
-        <h5 style="font-size: 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center;">
-            <span class="material-icons" style="margin-right: 0.5rem;">
-                history
-            </span>
-            История вычислений
-        </h5>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 style="font-size: 1.5rem; display: flex; align-items: center;">
+                <span class="material-icons" style="margin-right: 0.5rem;">
+                    history
+                </span>
+                История вычислений
+            </h5>
+            <div class="d-flex align-items-center">
+                <span class="me-2">Показывать по:</span>
+                <select class="form-select form-select-sm" style="width: auto;" onchange="changePerPage(this.value)">
+                    {% for count in [10, 25, 50, 100] %}
+                    <option value="{{ count }}" {% if pagination.per_page == count %}selected{% endif %}>
+                        {{ count }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
 
         <div class="table-container">
             <table class="material-table">
@@ -81,6 +93,56 @@
                 </tbody>
             </table>
         </div>
+
+        {% if pagination.pages > 1 %}
+        <div class="pagination-container mt-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="pagination-info">
+                    Показано {{ (pagination.current_page - 1) * pagination.per_page + 1 }} - 
+                    {{ min(pagination.current_page * pagination.per_page, pagination.total) }}
+                    из {{ pagination.total }}
+                </div>
+                <div class="pagination d-flex align-items-center">
+                    {% if pagination.current_page > 1 %}
+                    <a href="{{ url_for('history', page=1, sort=current_sort, order=current_order, per_page=pagination.per_page) }}"
+                       class="btn btn-outline-primary btn-sm me-2">
+                        <span class="material-icons">first_page</span>
+                    </a>
+                    <a href="{{ url_for('history', page=pagination.current_page-1, sort=current_sort, order=current_order, per_page=pagination.per_page) }}"
+                       class="btn btn-outline-primary btn-sm me-2">
+                        <span class="material-icons">chevron_left</span>
+                    </a>
+                    {% endif %}
+
+                    {% if pagination.current_page > 3 %}
+                    <span class="pagination-ellipsis">...</span>
+                    {% endif %}
+
+                    {% for p in range(max(1, pagination.current_page-2), min(pagination.pages+1, pagination.current_page+3)) %}
+                    <a href="{{ url_for('history', page=p, sort=current_sort, order=current_order, per_page=pagination.per_page) }}"
+                       class="btn btn-sm me-2 {{ 'btn-primary' if p == pagination.current_page else 'btn-outline-primary' }}">
+                        {{ p }}
+                    </a>
+                    {% endfor %}
+
+                    {% if pagination.current_page < pagination.pages - 2 %}
+                    <span class="pagination-ellipsis">...</span>
+                    {% endif %}
+
+                    {% if pagination.current_page < pagination.pages %}
+                    <a href="{{ url_for('history', page=pagination.current_page+1, sort=current_sort, order=current_order, per_page=pagination.per_page) }}"
+                       class="btn btn-outline-primary btn-sm me-2">
+                        <span class="material-icons">chevron_right</span>
+                    </a>
+                    <a href="{{ url_for('history', page=pagination.pages, sort=current_sort, order=current_order, per_page=pagination.per_page) }}"
+                       class="btn btn-outline-primary btn-sm">
+                        <span class="material-icons">last_page</span>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 
@@ -136,6 +198,62 @@
 .btn-sm .material-icons {
     font-size: 1.2rem;
 }
+
+.pagination {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+}
+
+.pagination .btn {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.pagination .btn .material-icons {
+    font-size: 1.2rem;
+}
+
+.pagination-container {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(0,0,0,0.1);
+}
+
+.pagination-info {
+    color: #666;
+    font-size: 0.875rem;
+}
+
+.form-select {
+    padding: 0.375rem 2rem 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    background-color: white;
+}
+
+.form-select:focus {
+    border-color: var(--md-sys-color-primary);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0,100,149,0.1);
+}
+
+.pagination-ellipsis {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+    color: var(--md-sys-color-primary);
+    font-weight: bold;
+}
 </style>
 {% endblock %}
 
@@ -156,6 +274,10 @@ function showVisualization(sequence) {
         Plotly.newPlot('visualization', JSON.parse(data.visualization));
         vizEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
+}
+
+function changePerPage(value) {
+    window.location.href = "{{ url_for('history', sort=current_sort, order=current_order) }}&per_page=" + value;
 }
 </script>
 {% endblock %} 

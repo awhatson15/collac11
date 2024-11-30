@@ -75,9 +75,9 @@ def get_sequence(number: int) -> list[int]:
         return eval(result[0])
     return None
 
-def get_history(sort_by='date', order='desc'):
+def get_history(sort_by='date', order='desc', page=1, per_page=10):
     """
-    Получение истории вычислений
+    Получение истории вычислений с пагинацией
     """
     conn = sqlite3.connect('/data/collatz.db')
     cursor = conn.cursor()
@@ -87,7 +87,7 @@ def get_history(sort_by='date', order='desc'):
     if order not in ['ASC', 'DESC']:
         order = 'DESC'
     
-    # Определяем оле для сортировки с учетом типа max_value
+    # Определяем поле для сортировки с учетом типа max_value
     sort_columns = {
         'number': 'CAST(number AS INTEGER)',
         'steps': 'CAST(steps AS INTEGER)',
@@ -96,22 +96,36 @@ def get_history(sort_by='date', order='desc'):
     }
     sort_column = sort_columns.get(sort_by, 'date')
     
+    # Получаем общее количество записей
+    total = cursor.execute('SELECT COUNT(*) FROM calculations').fetchone()[0]
+    
+    # Вычисляем смещение для текущей страницы
+    offset = (page - 1) * per_page
+    
+    # Получаем данные с пагинацией
     cursor.execute(f'''
         SELECT number, sequence, steps, date, max_value 
         FROM calculations 
         ORDER BY {sort_column} {order}
-    ''')
+        LIMIT ? OFFSET ?
+    ''', (per_page, offset))
     
     result = cursor.fetchall()
     conn.close()
     
-    return [{
-        'number': row[0],
-        'sequence': eval(row[1]),
-        'steps': row[2],
-        'date': datetime.strptime(row[3].split('.')[0], '%Y-%m-%d %H:%M:%S') if row[3] else None,
-        'max_value': int(row[4])
-    } for row in result]
+    return {
+        'items': [{
+            'number': row[0],
+            'sequence': eval(row[1]),
+            'steps': row[2],
+            'date': datetime.strptime(row[3].split('.')[0], '%Y-%m-%d %H:%M:%S') if row[3] else None,
+            'max_value': int(row[4])
+        } for row in result],
+        'total': total,
+        'pages': (total + per_page - 1) // per_page,
+        'current_page': page,
+        'per_page': per_page
+    }
 
 def get_next_number(start_from: int = 1) -> int:
     """

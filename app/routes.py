@@ -14,13 +14,18 @@ def index():
 
 @app.route('/history')
 def history():
-    sort_by = request.args.get('sort', 'date')  # По умолчанию сортируем по дате
-    order = request.args.get('order', 'desc')  # По умолчанию в обратном порядке
-    calculations = get_history(sort_by, order)
-    return render_template('history.html', 
-                         calculations=calculations, 
-                         current_sort=sort_by, 
-                         current_order=order)
+    sort_by = request.args.get('sort', 'date')
+    order = request.args.get('order', 'desc')
+    page = int(request.args.get('page', 1))
+    per_page = int(request.args.get('per_page', 10))
+    
+    result = get_history(sort_by, order, page, per_page)
+    
+    return render_template('history.html',
+                         calculations=result['items'],
+                         current_sort=sort_by,
+                         current_order=order,
+                         pagination=result)
 
 @app.route('/calculate', methods=['POST'])
 def calculate():
@@ -50,19 +55,19 @@ def calculate():
 @app.route('/overview')
 def overview():
     """Страница с общей визуализацией"""
-    calculations = get_history('steps', 'desc')  # Получаем все расчеты
-    return render_template('overview.html', calculations=calculations)
+    result = get_history('steps', 'desc', page=1, per_page=1000)  # Получаем все расчеты с пагинацией
+    return render_template('overview.html', calculations=result['items'])
 
 @app.route('/overview-data')
 def overview_data():
     """API для получения данных визуализации"""
-    calculations = get_history('steps', 'desc')
+    result = get_history('steps', 'desc', page=1, per_page=1000)  # Получаем все расчеты с пагинацией
     
     visualization = create_overview_visualization([{
         'number': calc['number'],
         'steps': calc['steps'],
         'max_value': calc['max_value']
-    } for calc in calculations])
+    } for calc in result['items']])
     
     return jsonify(visualization)
 
