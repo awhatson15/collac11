@@ -7,10 +7,42 @@
     <table class="table table-striped">
         <thead>
             <tr>
-                <th>Число</th>
-                <th>Шагов</th>
-                <th>Макс. значение</th>
-                <th>Дата</th>
+                <th>
+                    <a href="{{ url_for('history', sort='number', order='asc' if current_sort == 'number' and current_order == 'desc' else 'desc') }}" 
+                       class="text-dark text-decoration-none">
+                        Число
+                        {% if current_sort == 'number' %}
+                            <i class="bi bi-arrow-{{ 'up' if current_order == 'asc' else 'down' }}"></i>
+                        {% endif %}
+                    </a>
+                </th>
+                <th>
+                    <a href="{{ url_for('history', sort='steps', order='asc' if current_sort == 'steps' and current_order == 'desc' else 'desc') }}"
+                       class="text-dark text-decoration-none">
+                        Шагов
+                        {% if current_sort == 'steps' %}
+                            <i class="bi bi-arrow-{{ 'up' if current_order == 'asc' else 'down' }}"></i>
+                        {% endif %}
+                    </a>
+                </th>
+                <th>
+                    <a href="{{ url_for('history', sort='max_value', order='asc' if current_sort == 'max_value' and current_order == 'desc' else 'desc') }}"
+                       class="text-dark text-decoration-none">
+                        Макс. значение
+                        {% if current_sort == 'max_value' %}
+                            <i class="bi bi-arrow-{{ 'up' if current_order == 'asc' else 'down' }}"></i>
+                        {% endif %}
+                    </a>
+                </th>
+                <th>
+                    <a href="{{ url_for('history', sort='date', order='asc' if current_sort == 'date' and current_order == 'desc' else 'desc') }}"
+                       class="text-dark text-decoration-none">
+                        Дата
+                        {% if current_sort == 'date' %}
+                            <i class="bi bi-arrow-{{ 'up' if current_order == 'asc' else 'down' }}"></i>
+                        {% endif %}
+                    </a>
+                </th>
                 <th>Действия</th>
             </tr>
         </thead>
@@ -19,7 +51,7 @@
             <tr>
                 <td>{{ calc.number }}</td>
                 <td>{{ calc.steps }}</td>
-                <td>{{ calc.sequence | max }}</td>
+                <td>{{ calc.max_value }}</td>
                 <td>{{ calc.date.strftime('%Y-%m-%d %H:%M:%S') if calc.date else 'Нет данных' }}</td>
                 <td>
                     <button class="btn btn-sm btn-primary" onclick="showVisualization({{ calc.sequence }})">

@@ -9,8 +9,13 @@ def index():
 
 @app.route('/history')
 def history():
-    calculations = get_history()
-    return render_template('history.html', calculations=calculations, max=max)
+    sort_by = request.args.get('sort', 'date')  # По умолчанию сортируем по дате
+    order = request.args.get('order', 'desc')  # По умолчанию в обратном порядке
+    calculations = get_history(sort_by, order)
+    return render_template('history.html', 
+                         calculations=calculations, 
+                         current_sort=sort_by, 
+                         current_order=order)
 
 @app.route('/calculate', methods=['POST'])
 def calculate():

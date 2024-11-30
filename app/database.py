@@ -60,25 +60,60 @@ def get_sequence(number: int) -> list[int]:
         return eval(result[0])
     return None 
 
-def get_history() -> list:
+def get_history(sort_by: str = 'date', order: str = 'desc') -> list:
     """
-    Получение истории вычислений
+    Получение истории вычислений с сортировкой
     """
     conn = sqlite3.connect('/data/collatz.db')
     c = conn.cursor()
     
-    result = c.execute('''
-        SELECT initial_number, sequence, steps, calculated_at 
-        FROM sequences 
-        ORDER BY calculated_at DESC
-        LIMIT 100
-    ''').fetchall()
+    # Определяем поле для сортировки в SQL
+    sort_field = {
+        'number': 'initial_number',
+        'steps': 'steps',
+        'date': 'calculated_at',
+        'max_value': 'max_value'
+    }.get(sort_by, 'calculated_at')
     
+    # Добавляем вычисление максимального значения в запрос
+    query = '''
+        WITH sequence_stats AS (
+            SELECT 
+                sequences.id,
+                sequences.initial_number,
+                sequences.sequence,
+                sequences.steps,
+                sequences.calculated_at,
+                CAST(
+                    MAX(
+                        CASE 
+                            WHEN value != '' AND value != '['  AND value != ']' 
+                            THEN CAST(REPLACE(REPLACE(value, ',', ''), ' ', '') AS INTEGER)
+                        END
+                    ) 
+                    OVER (PARTITION BY sequences.id) AS INTEGER
+                ) as max_value
+            FROM sequences
+            CROSS JOIN json_each('[' || REPLACE(REPLACE(sequence, '[', ''), ']', '') || ']')
+        )
+        SELECT DISTINCT
+            initial_number,
+            sequence,
+            steps,
+            calculated_at,
+            max_value
+        FROM sequence_stats
+        ORDER BY {} {}
+        LIMIT 100
+    '''.format(sort_field, 'DESC' if order == 'desc' else 'ASC')
+    
+    result = c.execute(query).fetchall()
     conn.close()
     
     return [{
         'number': row[0],
         'sequence': eval(row[1]),
         'steps': row[2],
-        'date': datetime.strptime(row[3].split('.')[0], '%Y-%m-%d %H:%M:%S') if row[3] else None
+        'date': datetime.strptime(row[3].split('.')[0], '%Y-%m-%d %H:%M:%S') if row[3] else None,
+        'max_value': row[4]
     } for row in result]
