@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Визуализатор гипотезы Коллатца</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .input-container {
+            margin: 20px 0;
+        }
+        #visualization {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Визуализатор гипотезы Коллатца</h1>
+    
+    <div class="input-container">
+        <input type="number" id="number" min="1" placeholder="Введите число">
+        <button onclick="calculate()">Рассчитать</button>
+    </div>
+    
+    <div id="visualization"></div>
+
+    <script>
+        function calculate() {
+            const number = document.getElementById('number').value;
+            
+            fetch('/calculate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `number=${number}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                Plotly.newPlot('visualization', JSON.parse(data.visualization));
+            });
+        }
+    </script>
+</body>
+</html> 
