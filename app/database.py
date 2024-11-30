@@ -34,8 +34,8 @@ def save_sequence(number: int, sequence: list[int]):
     
     c.execute('''
         INSERT INTO sequences (initial_number, sequence, steps, calculated_at)
-        VALUES (?, ?, ?, ?)
-    ''', (number, str(sequence), len(sequence), datetime.now()))
+        VALUES (?, ?, ?, datetime('now'))
+    ''', (number, str(sequence), len(sequence)))
     
     conn.commit()
     conn.close()
@@ -59,3 +59,26 @@ def get_sequence(number: int) -> list[int]:
     if result:
         return eval(result[0])
     return None 
+
+def get_history() -> list:
+    """
+    Получение истории вычислений
+    """
+    conn = sqlite3.connect('/data/collatz.db')
+    c = conn.cursor()
+    
+    result = c.execute('''
+        SELECT initial_number, sequence, steps, calculated_at 
+        FROM sequences 
+        ORDER BY calculated_at DESC
+        LIMIT 100
+    ''').fetchall()
+    
+    conn.close()
+    
+    return [{
+        'number': row[0],
+        'sequence': eval(row[1]),
+        'steps': row[2],
+        'date': datetime.strptime(row[3].split('.')[0], '%Y-%m-%d %H:%M:%S') if row[3] else None
+    } for row in result]

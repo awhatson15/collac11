@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>История вычислений</h2>
+
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Число</th>
+                <th>Шагов</th>
+                <th>Макс. значение</th>
+                <th>Дата</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for calc in calculations %}
+            <tr>
+                <td>{{ calc.number }}</td>
+                <td>{{ calc.steps }}</td>
+                <td>{{ calc.sequence | max }}</td>
+                <td>{{ calc.date.strftime('%Y-%m-%d %H:%M:%S') if calc.date else 'Нет данных' }}</td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="showVisualization({{ calc.sequence }})">
+                        Показать график
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div id="visualization"></div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showVisualization(sequence) {
+    const trace = {
+        x: Array.from(Array(sequence.length).keys()),
+        y: sequence,
+        mode: 'lines+markers',
+        name: 'Последовательность Коллатца'
+    };
+
+    const layout = {
+        title: 'Визуализация последовательности Коллатца',
+        xaxis: {title: 'Шаг'},
+        yaxis: {title: 'Значение'}
+    };
+
+    Plotly.newPlot('visualization', [trace], layout);
+}
+</script>
+{% endblock %} 

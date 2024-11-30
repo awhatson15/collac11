@@ -1,49 +1,66 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Визуализатор гипотезы Коллатца</title>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .input-container {
-            margin: 20px 0;
-        }
-        #visualization {
-            margin-top: 20px;
-        }
-    </style>
-</head>
-<body>
-    <h1>Визуализатор гипотезы Коллатца</h1>
-    
-    <div class="input-container">
-        <input type="number" id="number" min="1" placeholder="Введите число">
-        <button onclick="calculate()">Рассчитать</button>
-    </div>
-    
-    <div id="visualization"></div>
+{% extends "base.html" %}
 
-    <script>
-        function calculate() {
-            const number = document.getElementById('number').value;
-            
-            fetch('/calculate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `number=${number}`
-            })
-            .then(response => response.json())
-            .then(data => {
-                Plotly.newPlot('visualization', JSON.parse(data.visualization));
-            });
-        }
-    </script>
-</body>
-</html> 
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Введите число для расчета последовательности</h5>
+                <div class="input-container">
+                    <div class="input-group">
+                        <input type="number" class="form-control" id="number" min="1" placeholder="Введите положительное целое число">
+                        <button class="btn btn-primary" onclick="calculate()">Рассчитать</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="result-info d-none" id="resultInfo">
+    <div class="row">
+        <div class="col-md-4">
+            <strong>Начальное число:</strong> <span id="initialNumber"></span>
+        </div>
+        <div class="col-md-4">
+            <strong>Количество шагов:</strong> <span id="stepsCount"></span>
+        </div>
+        <div class="col-md-4">
+            <strong>Максимальное значение:</strong> <span id="maxValue"></span>
+        </div>
+    </div>
+</div>
+
+<div id="visualization"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function calculate() {
+    const number = document.getElementById('number').value;
+    if (!number || number < 1) {
+        alert('Пожалуйста, введите положительное целое число');
+        return;
+    }
+    
+    fetch('/calculate', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `number=${number}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Обновляем информацию о результате
+        document.getElementById('resultInfo').classList.remove('d-none');
+        document.getElementById('initialNumber').textContent = number;
+        document.getElementById('stepsCount').textContent = data.sequence.length - 1;
+        document.getElementById('maxValue').textContent = Math.max(...data.sequence);
+        
+        // Отображаем график
+        Plotly.newPlot('visualization', JSON.parse(data.visualization));
+    });
+}
+</script>
+{% endblock %} 

@@ -1,11 +1,16 @@
 from flask import render_template, request, jsonify
 from app import app
 from .collatz import calculate_sequence, create_visualization
-from .database import save_sequence, get_sequence
+from .database import save_sequence, get_sequence, get_history
 
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/history')
+def history():
+    calculations = get_history()
+    return render_template('history.html', calculations=calculations, max=max)
 
 @app.route('/calculate', methods=['POST'])
 def calculate():
