@@ -1,7 +1,7 @@
 from flask import render_template, request, jsonify, Response
 from app import app
 from .collatz import calculate_sequence, create_visualization, create_overview_visualization
-from .database import save_sequence, get_sequence, get_history, get_next_number
+from .database import save_sequence, get_sequence, get_history, get_next_number, get_min_uncalculated_number
 import time
 
 # Глобальная переменная для контроля автоматического расчета
@@ -71,7 +71,9 @@ def start_auto_calculate():
     """Запуск автоматического расчета"""
     global auto_calculate_active, current_number
     auto_calculate_active = True
-    current_number = int(request.args.get('start_from', 1))
+    # Используем минимальное нерассчитанное число, если не указано начальное
+    start_from = request.args.get('start_from')
+    current_number = int(start_from) if start_from else get_min_uncalculated_number()
     return jsonify({'status': 'started', 'from': current_number})
 
 @app.route('/auto-calculate/stop')

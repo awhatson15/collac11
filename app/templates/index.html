@@ -16,10 +16,12 @@
                 <div class="mt-3">
                     <h6>Автоматический расчет</h6>
                     <div class="input-group">
-                        <input type="number" class="form-control" id="startFrom" min="1" placeholder="Начать с числа">
+                        <input type="number" class="form-control" id="startFrom" min="1" 
+                               placeholder="Начать с минимального нерассчитанного числа">
                         <button class="btn btn-success" id="startAutoCalc" onclick="startAutoCalculate()">Запустить</button>
                         <button class="btn btn-danger" id="stopAutoCalc" onclick="stopAutoCalculate()" disabled>Остановить</button>
                     </div>
+                    <small class="text-muted">Оставьте поле пустым для автоматического определения начального числа</small>
                     <div id="autoCalcStatus" class="mt-2"></div>
                 </div>
             </div>
@@ -76,13 +78,17 @@ function calculate() {
 let eventSource = null;
 
 function startAutoCalculate() {
-    const startFrom = document.getElementById('startFrom').value || 1;
+    const startFrom = document.getElementById('startFrom').value;
+    const url = startFrom ? 
+        `/auto-calculate/start?start_from=${startFrom}` : 
+        '/auto-calculate/start';
     
-    fetch(`/auto-calculate/start?start_from=${startFrom}`)
+    fetch(url)
         .then(response => response.json())
         .then(data => {
             document.getElementById('startAutoCalc').disabled = true;
             document.getElementById('stopAutoCalc').disabled = false;
+            document.getElementById('startFrom').value = data.from;
             
             // Подключаемся к потоку событий
             eventSource = new EventSource('/auto-calculate/stream');

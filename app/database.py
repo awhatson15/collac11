@@ -130,3 +130,32 @@ def get_next_number(start_from: int = 1) -> int:
             conn.close()
             return start_from
         start_from += 1
+
+def get_min_uncalculated_number() -> int:
+    """
+    Находит минимальное нерассчитанное число
+    """
+    conn = sqlite3.connect('/data/collatz.db')
+    c = conn.cursor()
+    
+    # Получаем все числа из базы, сортируем как числа, а не строки
+    result = c.execute('''
+        SELECT CAST(number AS INTEGER) as num 
+        FROM calculations 
+        ORDER BY num ASC
+    ''').fetchall()
+    
+    conn.close()
+    
+    if not result:
+        return 1
+        
+    numbers = [row[0] for row in result]
+    
+    # Ищем первый пропуск в последовательности
+    for i in range(len(numbers)):
+        if i + 1 != numbers[i]:
+            return i + 1
+            
+    # Если пропусков нет, возвращаем следующее число
+    return len(numbers) + 1
