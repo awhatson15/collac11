@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-    <!-- Статистика -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <!-- Первая строка -->
     <div class="stats shadow bg-base-100">
         <div class="stat">
             <div class="stat-figure text-primary">
@@ -36,6 +36,7 @@
         </div>
     </div>
 
+    <!-- Вторая строка -->
     <div class="stats shadow bg-base-100">
         <div class="stat">
             <div class="stat-figure text-primary">
@@ -44,6 +45,28 @@
             <div class="stat-title">Медиана шагов</div>
             <div class="stat-value text-primary">{{ (calculations|map(attribute='steps')|list|median)|round|int }}</div>
             <div class="stat-desc">Среднее количество шагов</div>
+        </div>
+    </div>
+
+    <div class="stats shadow bg-base-100">
+        <div class="stat">
+            <div class="stat-figure text-primary">
+                <span class="material-icons">functions</span>
+            </div>
+            <div class="stat-title">Среднее макс. значение</div>
+            <div class="stat-value text-primary">{{ (calculations|map(attribute='max_value')|list|map('int')|list|mean)|round|int }}</div>
+            <div class="stat-desc">Среднее из максимальных значений</div>
+        </div>
+    </div>
+
+    <div class="stats shadow bg-base-100">
+        <div class="stat">
+            <div class="stat-figure text-primary">
+                <span class="material-icons">query_stats</span>
+            </div>
+            <div class="stat-title">Последнее число</div>
+            <div class="stat-value text-primary">{{ calculations|map(attribute='number')|map('int')|list|max }}</div>
+            <div class="stat-desc">Последнее вычисленное число</div>
         </div>
     </div>
 </div>

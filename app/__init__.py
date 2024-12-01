@@ -1,4 +1,5 @@
 from flask import Flask
+from statistics import mean  # Добавляем импорт
 
 app = Flask(__name__)
 
@@ -21,6 +22,7 @@ def is_even(value):
 app.jinja_env.globals.update(min=min, max=max)
 app.jinja_env.filters['median'] = median
 app.jinja_env.filters['even'] = is_even
+app.jinja_env.filters['mean'] = mean  # Добавляем фильтр mean
 
 from . import routes
 from .database import init_db
