@@ -1,6 +1,6 @@
 from flask import render_template, request, jsonify, Response
 from app import app
-from .collatz import calculate_sequence, create_visualization, create_overview_visualization
+from .collatz import calculate_sequence, create_visualization, create_tree_visualization
 from .database import save_sequence, get_sequence, get_history, get_next_number, get_min_uncalculated_number
 import time
 
@@ -60,16 +60,11 @@ def overview():
 
 @app.route('/overview-data')
 def overview_data():
-    """API для получения данных визуализации"""
-    result = get_history('steps', 'desc', page=1, per_page=1000)  # Получаем все расчеты с пагинацией
-    
-    visualization = create_overview_visualization([{
-        'number': calc['number'],
-        'steps': calc['steps'],
-        'max_value': calc['max_value']
-    } for calc in result['items']])
-    
-    return jsonify(visualization)
+    """
+    Возвращает данные для визуализации на странице статистики
+    """
+    result = get_history(sort_by='date', order='desc', per_page=100)
+    return jsonify(create_tree_visualization(result['items']))
 
 @app.route('/auto-calculate/start')
 def start_auto_calculate():
@@ -116,3 +111,73 @@ def auto_calculate_stream():
             time.sleep(1)  # Пауза между расчетами
             
     return Response(generate(), mimetype='text/event-stream') 
+
+@app.route('/tree/cytoscape')
+def tree_cytoscape():
+    """Страница с визуализацией через Cytoscape.js"""
+    result = get_history('steps', 'desc', page=1, per_page=1000)
+    print("Cytoscape view - calculations:", len(result['items']))
+    return render_template('tree_cytoscape.html', calculations=result['items'])
+
+@app.route('/tree-data')
+def tree_data():
+    """API для получения данных дерева"""
+    try:
+        result = get_history(sort_by='number', order='asc', per_page=500)  # Получаем 500 записей, сортировка по числу по возрастанию
+        print("History result:", result)
+        
+        # Создаем узлы и рёбра
+        nodes = []
+        edges = []
+        seen_nodes = set()
+        
+        if not result['items']:
+            print("No items in result")
+            return jsonify({
+                'nodes': [],
+                'edges': []
+            })
+        
+        print(f"Processing {len(result['items'])} items")
+        
+        for calc in result['items'][-30:]:  # Берем последние 30 последовательностей
+            try:
+                sequence = [int(x) for x in calc['sequence']]
+                print(f"Processing sequence: {sequence}")
+                
+                for i, number in enumerate(sequence):
+                    if number not in seen_nodes:
+                        seen_nodes.add(number)
+                        nodes.append({
+                            'data': {
+                                'id': str(number),  # Преобразуем в строку для совместимости
+                                'color': '#FFA500' if number % 2 else '#3388FF',
+                                'size': 30 + (len(sequence) - i) * 2
+                            }
+                        })
+                    
+                    if i < len(sequence) - 1:
+                        edges.append({
+                            'data': {
+                                'id': f'e{number}-{sequence[i + 1]}',  # Добавляем уникальный id для ребра
+                                'source': str(number),
+                                'target': str(sequence[i + 1])
+                            }
+                        })
+            except (ValueError, KeyError, TypeError) as e:
+                print(f"Error processing sequence: {e}")
+                continue
+        
+        response_data = {
+            'nodes': nodes,
+            'edges': edges
+        }
+        print(f"Returning {len(nodes)} nodes and {len(edges)} edges")  # Добавляем логирование
+        return jsonify(response_data)
+        
+    except Exception as e:
+        print(f"Error in tree_data: {e}")
+        return jsonify({
+            'nodes': [],
+            'edges': []
+        }), 500 

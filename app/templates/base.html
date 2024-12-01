@@ -2,10 +2,13 @@
 <html>
 <head>
     <title>{% block title %}Визуализатор гипотезы Коллатца{% endblock %}</title>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/material-components-web@14.0.0/dist/material-components-web.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.26.0/cytoscape.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dagre/0.8.5/dagre.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js"></script>
+    {% block head %}{% endblock %}
     <style>
         :root {
             --md-sys-color-primary: #006495;
@@ -158,6 +161,45 @@
             color: #666;
             margin-bottom: 0.5rem;
         }
+
+        .nav-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .nav-dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            min-width: 160px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            z-index: 1000;
+            top: 100%;
+            right: 0;
+            margin-top: 4px;
+        }
+
+        .nav-dropdown-content a {
+            color: #333;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            transition: background-color 0.3s ease;
+        }
+
+        .nav-dropdown-content a:hover {
+            background-color: #f5f5f5;
+        }
+
+        .nav-dropdown:hover .nav-dropdown-content {
+            display: block;
+        }
+
+        .nav-dropdown .nav-link {
+            display: flex;
+            align-items: center;
+        }
     </style>
 </head>
 <body>
@@ -185,9 +227,9 @@
                     </a>
                     <a class="nav-link" href="/overview">
                         <span class="material-icons" style="vertical-align: middle; margin-right: 0.25rem;">
-                            analytics
+                            account_tree
                         </span>
-                        Статистика
+                        Дерево
                     </a>
                 </div>
             </div>

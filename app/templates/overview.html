@@ -1,107 +1,188 @@
 {% extends "base.html" %}
 
+{% block head %}
+{{ super() }}
+{% endblock %}
+
 {% block content %}
 <div class="overview-header">
     <h5 style="font-size: 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center;">
         <span class="material-icons" style="margin-right: 0.5rem;">
-            analytics
+            account_tree
         </span>
-        Общая статистика
+        Дерево
     </h5>
 </div>
 
-<div class="stats-grid">
-    <div class="stats-card elevated">
-        <span class="material-icons stats-icon">numbers</span>
-        <div class="stats-label">Всего чисел</div>
-        <div class="stats-number">{{ calculations|length }}</div>
-    </div>
-    
-    <div class="stats-card elevated">
-        <span class="material-icons stats-icon">trending_up</span>
-        <div class="stats-label">Максимальное количество шагов</div>
-        <div class="stats-number">{{ calculations|map(attribute='steps')|max }}</div>
-        <div class="stats-subtitle">
-            для числа {{ calculations|selectattr('steps', 'eq', calculations|map(attribute='steps')|max)|map(attribute='number')|first }}
-        </div>
-    </div>
-    
-    <div class="stats-card elevated">
-        <span class="material-icons stats-icon">all_time_high</span>
-        <div class="stats-label">Наибольшее значение</div>
-        <div class="stats-number">{{ calculations|map(attribute='max_value')|max }}</div>
-        <div class="stats-subtitle">
-            для числа {{ calculations|selectattr('max_value', 'eq', calculations|map(attribute='max_value')|max)|map(attribute='number')|first }}
-        </div>
+{% if calculations|length > 0 %}
+<div class="tree-container">
+    <div id="cy" style="width: 100%; height: calc(100vh - 120px);"></div>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body text-center">
+        <span class="material-icons" style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;">
+            info
+        </span>
+        <h5>Нет данных для отображения</h5>
+        <p>Начните вычисления на главной странице, чтобы увидеть дерево последовательностей.</p>
     </div>
 </div>
-
-<div class="card mt-4">
-    <div class="card-body">
-        <div id="visualization"></div>
-    </div>
-</div>
+{% endif %}
 {% endblock %}
 
 {% block styles %}
 <style>
 .overview-header {
-    margin-bottom: 2rem;
-}
-
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
-
-.stats-card.elevated {
-    background: white;
-    padding: 2rem;
-    border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    text-align: center;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.stats-card.elevated:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-}
-
-.stats-icon {
-    font-size: 2.5rem;
-    color: var(--md-sys-color-primary);
     margin-bottom: 1rem;
 }
 
-.stats-number {
-    font-size: 3rem;
-    font-weight: 700;
-    color: var(--md-sys-color-primary);
-    margin: 1rem 0;
+.tree-container {
+    position: relative;
+    width: 100vw;
+    height: calc(100vh - 120px);
+    margin-left: calc(-50vw + 50%);
+    margin-right: calc(-50vw + 50%);
+    background: white;
 }
 
-.stats-subtitle {
-    font-size: 0.875rem;
-    color: #666;
-    margin-top: 0.5rem;
+.controls {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 999;
 }
 
-.mt-4 {
-    margin-top: 2rem;
+.controls .btn {
+    margin: 5px;
+}
+
+.card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin: 0 1rem;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+.text-center {
+    text-align: center;
 }
 </style>
 {% endblock %}
 
 {% block scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    fetch('/overview-data')
-        .then(response => response.json())
+window.addEventListener('load', function() {
+    console.log('Window loaded');
+    
+    if (typeof cytoscape === 'undefined') {
+        console.error('Cytoscape library not loaded');
+        return;
+    }
+    
+    // Регистрируем расширение dagre
+    cytoscape.use(cytoscapeDagre);
+    console.log('Dagre extension registered');
+
+    const container = document.getElementById('cy');
+    if (!container) {
+        console.error('Container #cy not found');
+        return;
+    }
+    console.log('Container found:', container);
+
+    fetch('/tree-data')
+        .then(response => {
+            console.log('Response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
-            Plotly.newPlot('visualization', JSON.parse(data));
+            console.log('Tree data received:', data);
+            
+            if (!data.nodes || !data.edges) {
+                throw new Error('Invalid data structure');
+            }
+            
+            console.log(`Nodes: ${data.nodes.length}, Edges: ${data.edges.length}`);
+
+            const cy = cytoscape({
+                container: container,
+                elements: {
+                    nodes: data.nodes,
+                    edges: data.edges
+                },
+                style: [
+                    {
+                        selector: 'node',
+                        style: {
+                            'label': 'data(id)',
+                            'text-valign': 'center',
+                            'text-halign': 'center',
+                            'background-color': 'data(color)',
+                            'width': 'data(size)',
+                            'height': 'data(size)',
+                            'font-size': '14px',
+                            'color': '#fff',
+                            'text-outline-width': 2,
+                            'text-outline-color': 'data(color)'
+                        }
+                    },
+                    {
+                        selector: 'edge',
+                        style: {
+                            'width': 2,
+                            'line-color': '#888',
+                            'curve-style': 'bezier',
+                            'target-arrow-shape': 'triangle',
+                            'target-arrow-color': '#888'
+                        }
+                    }
+                ],
+                layout: {
+                    name: 'dagre',
+                    rankDir: 'TB',
+                    nodeSep: 50,
+                    rankSep: 100,
+                    animate: true,
+                    animationDuration: 500
+                }
+            });
+
+            // После инициализации подгоняем отображение
+            cy.ready(() => {
+                console.log('Cytoscape ready');
+                cy.fit();
+                cy.center();
+            });
+
+            // Делаем экземпляр cytoscape доступным глобально
+            window.cy = cy;
+
+            // Добавляем кнопки управления масштабом
+            const zoomControls = document.createElement('div');
+            zoomControls.classList.add('controls');
+            zoomControls.innerHTML = `
+                <button onclick="cy.fit()" class="btn btn-primary">
+                    <span class="material-icons">center_focus_strong</span>
+                </button>
+                <button onclick="cy.zoom(cy.zoom() * 1.2)" class="btn btn-primary">
+                    <span class="material-icons">zoom_in</span>
+                </button>
+                <button onclick="cy.zoom(cy.zoom() / 1.2)" class="btn btn-primary">
+                    <span class="material-icons">zoom_out</span>
+                </button>
+            `;
+            document.querySelector('.tree-container').appendChild(zoomControls);
+        })
+        .catch(error => {
+            console.error('Error:', error);
         });
 });
 </script>

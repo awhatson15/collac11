@@ -53,32 +53,28 @@ def get_history(sort_by='date', order='desc', page=1, per_page=10):
     sort_direction = DESCENDING if order.lower() == 'desc' else ASCENDING
     
     # Определяем поле для сортировки
-    sort_field = {
-        'number': 'number',
-        'steps': 'steps',
-        'max_value': 'max_value',
-        'date': 'date'
-    }.get(sort_by, 'date')
+    sort_field = sort_by
     
     # Получаем общее количество записей
     total = calculations.count_documents({})
     
-    # Получаем данные с пагинацией
-    cursor = calculations.find({}) \
-        .sort(sort_field, sort_direction) \
-        .skip((page - 1) * per_page) \
-        .limit(per_page)
+    # Вычисляем смещение для пагинации
+    offset = (page - 1) * per_page
     
-    items = [{
-        'number': doc['number'],
-        'sequence': doc['sequence'],
-        'steps': doc['steps'],
-        'date': doc['date'],
-        'max_value': int(doc['max_value'])
-    } for doc in cursor]
+    # Получаем записи с сортировкой и пагинацией
+    cursor = calculations.find({}).sort(sort_field, sort_direction).skip(offset).limit(per_page)
     
+    result = list(cursor)  # Преобразуем курсор в список
+    
+    # Форматируем результат
     return {
-        'items': items,
+        'items': [{
+            'number': doc['number'],
+            'sequence': doc['sequence'],
+            'steps': doc['steps'],
+            'date': doc['date'],
+            'max_value': doc['max_value']
+        } for doc in result],
         'total': total,
         'pages': (total + per_page - 1) // per_page,
         'current_page': page,
