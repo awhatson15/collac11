@@ -1,246 +1,58 @@
 <!DOCTYPE html>
-<html>
+<html data-theme="light">
 <head>
-    <title>{% block title %}Визуализатор гипотезы Коллатца{% endblock %}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <title>Визуализатор гипотезы Коллатца</title>
+    <!-- Tailwind + daisyUI -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <link href="{{ url_for('static', filename='css/tailwind.css') }}" rel="stylesheet">
+    <!-- Иконки -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/material-components-web@14.0.0/dist/material-components-web.min.css" rel="stylesheet">
+    <!-- Cytoscape -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.26.0/cytoscape.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dagre/0.8.5/dagre.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js"></script>
-    {% block head %}{% endblock %}
+    <!-- Plotly -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    
     <style>
         :root {
-            --md-sys-color-primary: #006495;
-            --md-sys-color-surface: #fafafa;
-            --md-sys-color-background: #ffffff;
-            --md-sys-color-on-surface: #1a1c1e;
-        }
-
-        body {
-            font-family: 'Roboto', sans-serif;
-            margin: 0;
-            background-color: var(--md-sys-color-background);
-            color: var(--md-sys-color-on-surface);
-        }
-
-        .navbar {
-            background-color: var(--md-sys-color-primary);
-            color: white;
-            padding: 1rem 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .card {
-            background: var(--md-sys-color-surface);
-            border-radius: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            margin-bottom: 1.5rem;
-            transition: box-shadow 0.3s ease;
-        }
-
-        .card:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-        }
-
-        .card-body {
-            padding: 1.5rem;
-        }
-
-        .input-container {
-            margin: 2rem 0;
-        }
-
-        .btn {
-            border-radius: 24px;
-            padding: 0.75rem 1.5rem;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
-        }
-
-        .btn-primary {
-            background-color: var(--md-sys-color-primary);
-            color: white;
-        }
-
-        .btn-success {
-            background-color: #2e7d32;
-            color: white;
-        }
-
-        .btn-danger {
-            background-color: #d32f2f;
-            color: white;
-        }
-
-        .input-group {
-            display: flex;
-            gap: 1rem;
-        }
-
-        input[type="number"] {
-            padding: 0.75rem 1rem;
-            border: 1px solid #ddd;
-            border-radius: 12px;
-            font-size: 1rem;
-            width: 100%;
-            transition: border-color 0.3s ease;
-        }
-
-        input[type="number"]:focus {
-            outline: none;
-            border-color: var(--md-sys-color-primary);
-        }
-
-        .status-chip {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.5rem 1rem;
-            border-radius: 16px;
-            background: #e8f4fd;
-            color: var(--md-sys-color-primary);
-            font-size: 0.875rem;
-            margin-top: 1rem;
-        }
-
-        .status-chip .material-icons {
-            font-size: 1.2rem;
-            margin-right: 0.5rem;
-        }
-
-        #visualization {
-            margin-top: 2rem;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-
-        .nav-link {
-            color: white;
-            text-decoration: none;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            transition: background-color 0.3s ease;
-        }
-
-        .nav-link:hover {
-            background-color: rgba(255,255,255,0.1);
-        }
-
-        .result-info {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin: 1rem 0;
-        }
-
-        .stats-card {
-            text-align: center;
-            padding: 2rem;
-        }
-
-        .stats-number {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--md-sys-color-primary);
-            margin: 1rem 0;
-        }
-
-        .stats-label {
-            font-size: 1rem;
-            color: #666;
-            margin-bottom: 0.5rem;
-        }
-
-        .nav-dropdown {
-            position: relative;
-            display: inline-block;
-        }
-
-        .nav-dropdown-content {
-            display: none;
-            position: absolute;
-            background-color: white;
-            min-width: 160px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            border-radius: 8px;
-            z-index: 1000;
-            top: 100%;
-            right: 0;
-            margin-top: 4px;
-        }
-
-        .nav-dropdown-content a {
-            color: #333;
-            padding: 12px 16px;
-            text-decoration: none;
-            display: block;
-            transition: background-color 0.3s ease;
-        }
-
-        .nav-dropdown-content a:hover {
-            background-color: #f5f5f5;
-        }
-
-        .nav-dropdown:hover .nav-dropdown-content {
-            display: block;
-        }
-
-        .nav-dropdown .nav-link {
-            display: flex;
-            align-items: center;
+            --primary: #006495;
+            --primary-focus: #005481;
         }
     </style>
 </head>
-<body>
-    <nav class="navbar">
-        <div class="container">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <a class="navbar-brand" href="/" style="color: white; text-decoration: none; font-size: 1.5rem;">
-                    <span class="material-icons" style="vertical-align: middle; margin-right: 0.5rem;">
-                        functions
-                    </span>
+<body class="min-h-screen bg-base-100">
+    <!-- Навигация -->
+    <div class="navbar bg-primary text-primary-content shadow-lg">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center w-full">
+                <a href="/" class="text-xl flex items-center gap-2">
+                    <span class="material-icons">functions</span>
                     Гипотеза Коллатца
                 </a>
-                <div style="display: flex; gap: 1rem;">
-                    <a class="nav-link" href="/">
-                        <span class="material-icons" style="vertical-align: middle; margin-right: 0.25rem;">
-                            calculate
-                        </span>
+                <div class="flex gap-4">
+                    <a href="/" class="btn btn-ghost normal-case">
+                        <span class="material-icons mr-1">calculate</span>
                         Калькулятор
                     </a>
-                    <a class="nav-link" href="/history">
-                        <span class="material-icons" style="vertical-align: middle; margin-right: 0.25rem;">
-                            history
-                        </span>
+                    <a href="/history" class="btn btn-ghost normal-case">
+                        <span class="material-icons mr-1">history</span>
                         История
                     </a>
-                    <a class="nav-link" href="/overview">
-                        <span class="material-icons" style="vertical-align: middle; margin-right: 0.25rem;">
-                            account_tree
-                        </span>
+                    <a href="/overview" class="btn btn-ghost normal-case">
+                        <span class="material-icons mr-1">account_tree</span>
                         Дерево
                     </a>
                 </div>
             </div>
         </div>
-    </nav>
-
-    <div class="container">
-        {% block content %}{% endblock %}
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/material-components-web@14.0.0/dist/material-components-web.min.js"></script>
+    <!-- Основной контент -->
+    <main class="container mx-auto px-4 py-8">
+        {% block content %}{% endblock %}
+    </main>
+
     {% block scripts %}{% endblock %}
 </body>
 </html> 

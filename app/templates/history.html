@@ -1,18 +1,16 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="card">
+<div class="card bg-base-100 shadow-xl">
     <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h5 style="font-size: 1.5rem; display: flex; align-items: center;">
-                <span class="material-icons" style="margin-right: 0.5rem;">
-                    history
-                </span>
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="card-title text-2xl flex items-center gap-2">
+                <span class="material-icons">history</span>
                 История вычислений
-            </h5>
-            <div class="d-flex align-items-center">
-                <span class="me-2">Показывать по:</span>
-                <select class="form-select form-select-sm" style="width: auto;" onchange="changePerPage(this.value)">
+            </h2>
+            <div class="flex items-center gap-2">
+                <span>Показывать по:</span>
+                <select class="select select-bordered select-sm w-auto" onchange="changePerPage(this.value)">
                     {% for count in [10, 25, 50, 100] %}
                     <option value="{{ count }}" {% if pagination.per_page == count %}selected{% endif %}>
                         {{ count }}
@@ -22,16 +20,16 @@
             </div>
         </div>
 
-        <div class="table-container">
-            <table class="material-table">
+        <div class="overflow-x-auto">
+            <table class="table table-zebra">
                 <thead>
                     <tr>
                         <th>
                             <a href="{{ url_for('history', sort='number', order='asc' if current_sort == 'number' and current_order == 'desc' else 'desc') }}" 
-                               class="sort-link">
-                                <span>Число</span>
+                               class="flex items-center gap-1">
+                                Число
                                 {% if current_sort == 'number' %}
-                                    <span class="material-icons">
+                                    <span class="material-icons text-sm">
                                         {{ 'arrow_upward' if current_order == 'asc' else 'arrow_downward' }}
                                     </span>
                                 {% endif %}
@@ -39,10 +37,10 @@
                         </th>
                         <th>
                             <a href="{{ url_for('history', sort='steps', order='asc' if current_sort == 'steps' and current_order == 'desc' else 'desc') }}"
-                               class="sort-link">
-                                <span>Шагов</span>
+                               class="flex items-center gap-1">
+                                Шаги
                                 {% if current_sort == 'steps' %}
-                                    <span class="material-icons">
+                                    <span class="material-icons text-sm">
                                         {{ 'arrow_upward' if current_order == 'asc' else 'arrow_downward' }}
                                     </span>
                                 {% endif %}
@@ -50,10 +48,10 @@
                         </th>
                         <th>
                             <a href="{{ url_for('history', sort='max_value', order='asc' if current_sort == 'max_value' and current_order == 'desc' else 'desc') }}"
-                               class="sort-link">
-                                <span>Макс. значение</span>
+                               class="flex items-center gap-1">
+                                Макс. значение
                                 {% if current_sort == 'max_value' %}
-                                    <span class="material-icons">
+                                    <span class="material-icons text-sm">
                                         {{ 'arrow_upward' if current_order == 'asc' else 'arrow_downward' }}
                                     </span>
                                 {% endif %}
@@ -61,10 +59,10 @@
                         </th>
                         <th>
                             <a href="{{ url_for('history', sort='date', order='asc' if current_sort == 'date' and current_order == 'desc' else 'desc') }}"
-                               class="sort-link">
-                                <span>Дата</span>
+                               class="flex items-center gap-1">
+                                Дата
                                 {% if current_sort == 'date' %}
-                                    <span class="material-icons">
+                                    <span class="material-icons text-sm">
                                         {{ 'arrow_upward' if current_order == 'asc' else 'arrow_downward' }}
                                     </span>
                                 {% endif %}
@@ -81,11 +79,9 @@
                         <td>{{ calc.max_value }}</td>
                         <td>{{ calc.date.strftime('%Y-%m-%d %H:%M:%S') if calc.date else 'Нет данных' }}</td>
                         <td>
-                            <button class="btn btn-primary btn-sm" onclick="showVisualization({{ calc.sequence }})">
-                                <span class="material-icons">
-                                    show_chart
-                                </span>
-                                <span>График</span>
+                            <button class="btn btn-primary btn-sm" onclick="showVisualization('{{ calc.sequence|tojson|safe }}')">
+                                <span class="material-icons text-sm">show_chart</span>
+                                График
                             </button>
                         </td>
                     </tr>
@@ -94,190 +90,118 @@
             </table>
         </div>
 
+        <!-- Пагинация -->
         {% if pagination.pages > 1 %}
-        <div class="pagination-container mt-4">
-            <div class="d-flex justify-content-between align-items-center">
-                <div class="pagination-info">
-                    Показано {{ (pagination.current_page - 1) * pagination.per_page + 1 }} - 
-                    {{ min(pagination.current_page * pagination.per_page, pagination.total) }}
-                    из {{ pagination.total }}
-                </div>
-                <div class="pagination d-flex align-items-center">
-                    {% if pagination.current_page > 1 %}
-                    <a href="{{ url_for('history', page=1, sort=current_sort, order=current_order, per_page=pagination.per_page) }}"
-                       class="btn btn-outline-primary btn-sm me-2">
-                        <span class="material-icons">first_page</span>
-                    </a>
-                    <a href="{{ url_for('history', page=pagination.current_page-1, sort=current_sort, order=current_order, per_page=pagination.per_page) }}"
-                       class="btn btn-outline-primary btn-sm me-2">
-                        <span class="material-icons">chevron_left</span>
-                    </a>
-                    {% endif %}
+        <div class="flex justify-center mt-6">
+            <div class="join">
+                <!-- Кнопка "Предыдущая" -->
+                <a href="{{ url_for('history', page=pagination.current_page-1, sort=current_sort, order=current_order, per_page=pagination.per_page) }}" 
+                   class="join-item btn btn-sm {% if pagination.current_page == 1 %}btn-disabled{% endif %}">
+                    <span class="material-icons text-sm">chevron_left</span>
+                </a>
 
-                    {% if pagination.current_page > 3 %}
-                    <span class="pagination-ellipsis">...</span>
+                <!-- Первая страница -->
+                {% if pagination.current_page > 3 %}
+                    <a href="{{ url_for('history', page=1, sort=current_sort, order=current_order, per_page=pagination.per_page) }}" 
+                       class="join-item btn btn-sm">1</a>
+                    {% if pagination.current_page > 4 %}
+                        <span class="join-item btn btn-sm btn-disabled">...</span>
                     {% endif %}
+                {% endif %}
 
-                    {% for p in range(max(1, pagination.current_page-2), min(pagination.pages+1, pagination.current_page+3)) %}
-                    <a href="{{ url_for('history', page=p, sort=current_sort, order=current_order, per_page=pagination.per_page) }}"
-                       class="btn btn-sm me-2 {{ 'btn-primary' if p == pagination.current_page else 'btn-outline-primary' }}">
-                        {{ p }}
+                <!-- Страницы вокруг текущей -->
+                {% for page in range(
+                    [1, pagination.current_page - 1]|max,
+                    [pagination.pages + 1, pagination.current_page + 2]|min
+                ) %}
+                    <a href="{{ url_for('history', page=page, sort=current_sort, order=current_order, per_page=pagination.per_page) }}" 
+                       class="join-item btn btn-sm {% if page == pagination.current_page %}btn-active{% endif %}">
+                        {{ page }}
                     </a>
-                    {% endfor %}
+                {% endfor %}
 
-                    {% if pagination.current_page < pagination.pages - 2 %}
-                    <span class="pagination-ellipsis">...</span>
+                <!-- Последняя страница -->
+                {% if pagination.current_page < pagination.pages - 2 %}
+                    {% if pagination.current_page < pagination.pages - 3 %}
+                        <span class="join-item btn btn-sm btn-disabled">...</span>
                     {% endif %}
+                    <a href="{{ url_for('history', page=pagination.pages, sort=current_sort, order=current_order, per_page=pagination.per_page) }}" 
+                       class="join-item btn btn-sm">{{ pagination.pages }}</a>
+                {% endif %}
 
-                    {% if pagination.current_page < pagination.pages %}
-                    <a href="{{ url_for('history', page=pagination.current_page+1, sort=current_sort, order=current_order, per_page=pagination.per_page) }}"
-                       class="btn btn-outline-primary btn-sm me-2">
-                        <span class="material-icons">chevron_right</span>
-                    </a>
-                    <a href="{{ url_for('history', page=pagination.pages, sort=current_sort, order=current_order, per_page=pagination.per_page) }}"
-                       class="btn btn-outline-primary btn-sm">
-                        <span class="material-icons">last_page</span>
-                    </a>
-                    {% endif %}
-                </div>
+                <!-- Кнопка "Следующая" -->
+                <a href="{{ url_for('history', page=pagination.current_page+1, sort=current_sort, order=current_order, per_page=pagination.per_page) }}" 
+                   class="join-item btn btn-sm {% if pagination.current_page == pagination.pages %}btn-disabled{% endif %}">
+                    <span class="material-icons text-sm">chevron_right</span>
+                </a>
             </div>
         </div>
         {% endif %}
     </div>
 </div>
 
-<div id="visualization" style="display: none;"></div>
-
-<style>
-.table-container {
-    overflow-x: auto;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.material-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: white;
-}
-
-.material-table th {
-    background: var(--md-sys-color-surface);
-    padding: 1rem;
-    text-align: left;
-    font-weight: 500;
-    color: var(--md-sys-color-on-surface);
-    border-bottom: 1px solid rgba(0,0,0,0.1);
-}
-
-.material-table td {
-    padding: 1rem;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
-}
-
-.sort-link {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    text-decoration: none;
-    color: inherit;
-}
-
-.sort-link:hover {
-    color: var(--md-sys-color-primary);
-}
-
-.btn-sm {
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.btn-sm .material-icons {
-    font-size: 1.2rem;
-}
-
-.pagination {
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 0.5rem;
-}
-
-.pagination .btn {
-    min-width: 36px;
-    height: 36px;
-    padding: 0 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-}
-
-.pagination .btn .material-icons {
-    font-size: 1.2rem;
-}
-
-.pagination-container {
-    margin-top: 2rem;
-    padding-top: 1rem;
-    border-top: 1px solid rgba(0,0,0,0.1);
-}
-
-.pagination-info {
-    color: #666;
-    font-size: 0.875rem;
-}
-
-.form-select {
-    padding: 0.375rem 2rem 0.375rem 0.75rem;
-    font-size: 0.875rem;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    cursor: pointer;
-    background-color: white;
-}
-
-.form-select:focus {
-    border-color: var(--md-sys-color-primary);
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(0,100,149,0.1);
-}
-
-.pagination-ellipsis {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 36px;
-    height: 36px;
-    color: var(--md-sys-color-primary);
-    font-weight: bold;
-}
-</style>
+<!-- Модальное окно для визуализации -->
+<dialog id="visualization_modal" class="modal">
+    <div class="modal-box w-11/12 max-w-5xl">
+        <h3 class="font-bold text-lg mb-4">Визуализация последовательности</h3>
+        <div id="visualization_container"></div>
+        <div class="modal-action">
+            <form method="dialog">
+                <button class="btn">Закрыть</button>
+            </form>
+        </div>
+    </div>
+</dialog>
 {% endblock %}
 
 {% block scripts %}
 <script>
 function showVisualization(sequence) {
-    fetch('/calculate', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
+    const modal = document.getElementById('visualization_modal');
+    const container = document.getElementById('visualization_container');
+    
+    // Парсим последовательность из JSON строки в массив
+    const data = JSON.parse(sequence);
+    
+    // Создаем массив индексов для оси X
+    const xValues = Array.from({length: data.length}, (_, i) => i);
+    
+    // Создаем визуализацию
+    const trace = {
+        x: xValues,
+        y: data,
+        type: 'scatter',
+        mode: 'lines+markers',
+        line: {
+            color: '#006495',
+            width: 2
         },
-        body: `number=${sequence[0]}`
-    })
-    .then(response => response.json())
-    .then(data => {
-        const vizEl = document.getElementById('visualization');
-        vizEl.style.display = 'block';
-        Plotly.newPlot('visualization', JSON.parse(data.visualization));
-        vizEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
+        marker: {
+            size: 6,
+            color: '#006495'
+        }
+    };
+    
+    const layout = {
+        title: 'Последовательность Коллатца',
+        yaxis: { 
+            title: 'Значение',
+            gridcolor: '#e5e7eb'
+        },
+        xaxis: { 
+            title: 'Шаг',
+            gridcolor: '#e5e7eb'
+        },
+        plot_bgcolor: 'white',
+        paper_bgcolor: 'white'
+    };
+    
+    Plotly.newPlot(container, [trace], layout);
+    modal.showModal();
 }
 
 function changePerPage(value) {
-    window.location.href = "{{ url_for('history', sort=current_sort, order=current_order) }}&per_page=" + value;
+    window.location.href = "{{ url_for('history') }}?per_page=" + value;
 }
 </script>
 {% endblock %} 

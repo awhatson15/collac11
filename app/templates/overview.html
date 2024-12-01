@@ -1,77 +1,45 @@
 {% extends "base.html" %}
 
-{% block head %}
-{{ super() }}
-{% endblock %}
-
 {% block content %}
-<div class="overview-header">
-    <h5 style="font-size: 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center;">
-        <span class="material-icons" style="margin-right: 0.5rem;">
-            account_tree
-        </span>
-        Дерево
-    </h5>
+<div class="mb-6">
+    <h2 class="text-2xl font-bold flex items-center gap-2">
+        <span class="material-icons">account_tree</span>
+        Дерево последовательностей
+    </h2>
 </div>
 
 {% if calculations|length > 0 %}
-<div class="tree-container">
-    <div id="cy" style="width: 100%; height: calc(100vh - 120px);"></div>
+<div class="relative bg-base-100 rounded-box shadow-xl">
+    <div id="cy" class="w-full h-[calc(100vh-12rem)]"></div>
+    
+    <!-- Контролы -->
+    <div class="absolute top-4 right-4 flex gap-2">
+        <button onclick="cy.fit()" class="btn btn-circle btn-primary">
+            <span class="material-icons">center_focus_strong</span>
+        </button>
+        <button onclick="cy.zoom(cy.zoom() * 1.2)" class="btn btn-circle btn-primary">
+            <span class="material-icons">zoom_in</span>
+        </button>
+        <button onclick="cy.zoom(cy.zoom() / 1.2)" class="btn btn-circle btn-primary">
+            <span class="material-icons">zoom_out</span>
+        </button>
+    </div>
 </div>
 {% else %}
-<div class="card">
-    <div class="card-body text-center">
-        <span class="material-icons" style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;">
-            info
-        </span>
-        <h5>Нет данных для отображения</h5>
-        <p>Начните вычисления на главной странице, чтобы увидеть дерево последовательностей.</p>
+<div class="card bg-base-100 shadow-xl">
+    <div class="card-body items-center text-center">
+        <span class="material-icons text-5xl text-base-300 mb-4">info</span>
+        <h3 class="card-title text-xl mb-2">Нет данных для отображения</h3>
+        <p class="text-base-content/70">Начните вычисления на главной странице, чтобы увидеть дерево последовательностей.</p>
+        <div class="card-actions mt-4">
+            <a href="/" class="btn btn-primary">
+                <span class="material-icons mr-2">calculate</span>
+                Перейти к вычислениям
+            </a>
+        </div>
     </div>
 </div>
 {% endif %}
-{% endblock %}
-
-{% block styles %}
-<style>
-.overview-header {
-    margin-bottom: 1rem;
-}
-
-.tree-container {
-    position: relative;
-    width: 100vw;
-    height: calc(100vh - 120px);
-    margin-left: calc(-50vw + 50%);
-    margin-right: calc(-50vw + 50%);
-    background: white;
-}
-
-.controls {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    z-index: 999;
-}
-
-.controls .btn {
-    margin: 5px;
-}
-
-.card {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    margin: 0 1rem;
-}
-
-.card-body {
-    padding: 1.5rem;
-}
-
-.text-center {
-    text-align: center;
-}
-</style>
 {% endblock %}
 
 {% block scripts %}
@@ -84,7 +52,6 @@ window.addEventListener('load', function() {
         return;
     }
     
-    // Регистрируем расширение dagre
     cytoscape.use(cytoscapeDagre);
     console.log('Dagre extension registered');
 
@@ -155,34 +122,25 @@ window.addEventListener('load', function() {
                 }
             });
 
-            // После инициализации подгоняем отображение
             cy.ready(() => {
                 console.log('Cytoscape ready');
                 cy.fit();
                 cy.center();
             });
 
-            // Делаем экземпляр cytoscape доступным глобально
             window.cy = cy;
-
-            // Добавляем кнопки управления масштабом
-            const zoomControls = document.createElement('div');
-            zoomControls.classList.add('controls');
-            zoomControls.innerHTML = `
-                <button onclick="cy.fit()" class="btn btn-primary">
-                    <span class="material-icons">center_focus_strong</span>
-                </button>
-                <button onclick="cy.zoom(cy.zoom() * 1.2)" class="btn btn-primary">
-                    <span class="material-icons">zoom_in</span>
-                </button>
-                <button onclick="cy.zoom(cy.zoom() / 1.2)" class="btn btn-primary">
-                    <span class="material-icons">zoom_out</span>
-                </button>
-            `;
-            document.querySelector('.tree-container').appendChild(zoomControls);
         })
         .catch(error => {
             console.error('Error:', error);
+            // Показываем ошибку пользователю
+            const container = document.getElementById('cy');
+            container.innerHTML = `
+                <div class="flex flex-col items-center justify-center h-full">
+                    <span class="material-icons text-5xl text-error mb-4">error_outline</span>
+                    <h3 class="text-xl font-bold mb-2">Ошибка загрузки данных</h3>
+                    <p class="text-base-content/70">${error.message}</p>
+                </div>
+            `;
         });
 });
 </script>

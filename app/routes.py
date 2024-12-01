@@ -10,7 +10,10 @@ current_number = 1
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    """Главная страница"""
+    # Получаем общее количество записей без ограничения
+    result = get_history('steps', 'desc', page=1, per_page=None)
+    return render_template('index.html', calculations=result['items'])
 
 @app.route('/history')
 def history():
@@ -172,7 +175,7 @@ def tree_data():
             'nodes': nodes,
             'edges': edges
         }
-        print(f"Returning {len(nodes)} nodes and {len(edges)} edges")  # Добавляем логирование
+        print(f"Returning {len(nodes)} nodes and {len(edges)} edges")  # Добавляе логирование
         return jsonify(response_data)
         
     except Exception as e:

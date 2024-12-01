@@ -1,87 +1,137 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-body">
-                <h5 style="font-size: 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center;">
-                    <span class="material-icons" style="margin-right: 0.5rem;">
-                        input
-                    </span>
-                    Введите число для расчета
-                </h5>
-                <div class="input-container">
-                    <div class="input-group">
-                        <input type="number" class="form-control" id="number" min="1" 
-                               placeholder="Введите положительное целое число">
-                        <button class="btn btn-primary" onclick="calculate()">
-                            <span class="material-icons" style="vertical-align: middle; margin-right: 0.5rem;">
-                                play_arrow
-                            </span>
-                            Рассчитать
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="mt-4">
-                    <h6 style="font-size: 1.2rem; margin-bottom: 1rem; display: flex; align-items: center;">
-                        <span class="material-icons" style="margin-right: 0.5rem;">
-                            auto_mode
-                        </span>
-                        Автоматический расчет
-                    </h6>
-                    <div class="input-group">
-                        <input type="number" class="form-control" id="startFrom" min="1" 
-                               placeholder="Начать с минимального нерассчитанного числа">
-                        <button class="btn btn-success" id="startAutoCalc" onclick="startAutoCalculate()">
-                            <span class="material-icons" style="vertical-align: middle; margin-right: 0.5rem;">
-                                play_circle
-                            </span>
-                            Запустить
-                        </button>
-                        <button class="btn btn-danger" id="stopAutoCalc" onclick="stopAutoCalculate()" disabled>
-                            <span class="material-icons" style="vertical-align: middle; margin-right: 0.5rem;">
-                                stop_circle
-                            </span>
-                            Остановить
-                        </button>
-                    </div>
-                    <small class="text-muted" style="display: block; margin-top: 0.5rem;">
-                        <span class="material-icons" style="font-size: 1rem; vertical-align: middle; margin-right: 0.25rem;">
-                            info
-                        </span>
-                        Оставьте поле пустым для автоматического определения начального числа
-                    </small>
-                    <div id="autoCalcStatus" class="status-chip" style="display: none;">
-                        <span class="material-icons">autorenew</span>
-                        <span id="autoCalcStatusText"></span>
-                    </div>
-                </div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <!-- Статистика -->
+    <div class="stats shadow bg-base-100">
+        <div class="stat">
+            <div class="stat-figure text-primary">
+                <span class="material-icons">calculate</span>
+            </div>
+            <div class="stat-title">Всего вычислений</div>
+            <div class="stat-value text-primary">{{ calculations|length }}</div>
+            <div class="stat-desc">Общее количество расчетов</div>
+        </div>
+    </div>
+
+    <div class="stats shadow bg-base-100">
+        <div class="stat">
+            <div class="stat-figure text-primary">
+                <span class="material-icons">trending_up</span>
+            </div>
+            <div class="stat-title">Максимальное число</div>
+            <div class="stat-value text-primary">{{ calculations|map(attribute='max_value')|max }}</div>
+            <div class="stat-desc">Наибольшее достигнутое значение</div>
+        </div>
+    </div>
+
+    <div class="stats shadow bg-base-100">
+        <div class="stat">
+            <div class="stat-figure text-primary">
+                <span class="material-icons">timeline</span>
+            </div>
+            <div class="stat-title">Макс. количество шагов</div>
+            <div class="stat-value text-primary">{{ calculations|map(attribute='steps')|max }}</div>
+            <div class="stat-desc">Самая длинная последовательность</div>
+        </div>
+    </div>
+
+    <div class="stats shadow bg-base-100">
+        <div class="stat">
+            <div class="stat-figure text-primary">
+                <span class="material-icons">speed</span>
+            </div>
+            <div class="stat-title">Медиана шагов</div>
+            <div class="stat-value text-primary">{{ (calculations|map(attribute='steps')|list|median)|round|int }}</div>
+            <div class="stat-desc">Среднее количество шагов</div>
+        </div>
+    </div>
+</div>
+
+<!-- Калькулятор -->
+<div class="card bg-base-100 shadow-xl">
+    <div class="card-body">
+        <h2 class="card-title flex items-center gap-2 text-2xl mb-6">
+            <span class="material-icons">input</span>
+            Введите число для расчета
+        </h2>
+
+        <div class="form-control">
+            <div class="input-group">
+                <input type="number" 
+                       class="input input-bordered w-full" 
+                       id="number" 
+                       min="1" 
+                       placeholder="Введите положительное целое число">
+                <button class="btn btn-primary" onclick="calculate()">
+                    <span class="material-icons">play_arrow</span>
+                    Рассчитать
+                </button>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <h3 class="flex items-center gap-2 text-xl mb-4">
+            <span class="material-icons">auto_mode</span>
+            Автоматический расчет
+        </h3>
+
+        <div class="form-control">
+            <div class="input-group">
+                <input type="number" 
+                       class="input input-bordered w-full" 
+                       id="startFrom" 
+                       min="1" 
+                       placeholder="Начать с минимального нерассчитанного числа">
+                <button class="btn btn-success" id="startAutoCalc" onclick="startAutoCalculate()">
+                    <span class="material-icons">play_circle</span>
+                    Запустить
+                </button>
+                <button class="btn btn-error" id="stopAutoCalc" onclick="stopAutoCalculate()" disabled>
+                    <span class="material-icons">stop_circle</span>
+                    Остановить
+                </button>
+            </div>
+        </div>
+
+        <div class="mt-2 text-sm text-base-content/70 flex items-center gap-1">
+            <span class="material-icons text-base">info</span>
+            Оставьте поле пустым для автоматического определения начального числа
+        </div>
+
+        <div id="autoCalcStatus" class="alert alert-info mt-4 hidden">
+            <span class="material-icons">autorenew</span>
+            <span id="autoCalcStatusText"></span>
+        </div>
+    </div>
+</div>
+
+<!-- Результаты -->
+<div id="resultInfo" class="hidden mt-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="stats shadow bg-base-100">
+            <div class="stat">
+                <div class="stat-title">Начальное число</div>
+                <div class="stat-value" id="initialNumber"></div>
+            </div>
+        </div>
+        <div class="stats shadow bg-base-100">
+            <div class="stat">
+                <div class="stat-title">Количество шагов</div>
+                <div class="stat-value" id="stepsCount"></div>
+            </div>
+        </div>
+        <div class="stats shadow bg-base-100">
+            <div class="stat">
+                <div class="stat-title">Максимальное значение</div>
+                <div class="stat-value" id="maxValue"></div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="result-info d-none" id="resultInfo">
-    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
-        <div class="stats-card">
-            <div class="stats-label">Начальное число</div>
-            <div class="stats-number" id="initialNumber"></div>
-        </div>
-        <div class="stats-card">
-            <div class="stats-label">Количество шагов</div>
-            <div class="stats-number" id="stepsCount"></div>
-        </div>
-        <div class="stats-card">
-            <div class="stats-label">Максимальное значение</div>
-            <div class="stats-number" id="maxValue"></div>
-        </div>
-    </div>
-</div>
-
-<div id="visualization"></div>
-
+<div id="visualization" class="mt-8"></div>
 {% endblock %}
 
 {% block scripts %}
@@ -175,4 +225,4 @@ function updateAutoCalcStatus(text) {
     statusTextEl.textContent = text;
 }
 </script>
-{% endblock %} 
+{% endblock %}
